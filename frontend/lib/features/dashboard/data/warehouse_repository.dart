@@ -5,21 +5,23 @@ import 'package:http/http.dart' as http;
 import '../../../core/config/app_config.dart';
 import '../../products/data/models/product_model.dart';
 import '../../stock_movements/data/models/stock_movement_model.dart';
+import 'models/analytics_summary_model.dart';
+import 'models/stock_by_category_model.dart';
 
 class DashboardData {
   const DashboardData({
+    required this.summary,
     required this.products,
     required this.lowStockProducts,
     required this.movements,
+    required this.stockByCategory,
   });
 
+  final AnalyticsSummaryModel summary;
   final List<ProductModel> products;
   final List<ProductModel> lowStockProducts;
   final List<StockMovementModel> movements;
-
-  int get totalProducts => products.length;
-  int get totalLowStockProducts => lowStockProducts.length;
-  int get totalMovements => movements.length;
+  final List<StockByCategoryModel> stockByCategory;
 }
 
 class WarehouseRepository {
@@ -28,15 +30,71 @@ class WarehouseRepository {
   final http.Client _client;
 
   Future<DashboardData> getDashboardData() async {
+    final summary = await getAnalyticsSummary();
     final products = await getProducts();
-    final lowStockProducts = await getProducts(lowStockOnly: true);
+    final lowStockProducts = await getLowStockProducts();
     final movements = await getStockMovements();
+    final stockByCategory = await getStockByCategory();
 
     return DashboardData(
+      summary: summary,
       products: products,
       lowStockProducts: lowStockProducts,
       movements: movements,
+      stockByCategory: stockByCategory,
     );
+  }
+
+  Future<AnalyticsSummaryModel> getAnalyticsSummary() async {
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/analytics/summary');
+
+    final response = await _client.get(uri);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Error loading analytics summary. Status code: ${response.statusCode}',
+      );
+    }
+
+    return AnalyticsSummaryModel.fromJson(
+      jsonDecode(response.body) as Map<String, dynamic>,
+    );
+  }
+
+  Future<List<StockByCategoryModel>> getStockByCategory() async {
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/analytics/stock-by-category');
+
+    final response = await _client.get(uri);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Error loading stock by category. Status code: ${response.statusCode}',
+      );
+    }
+
+    final List<dynamic> rawItems = jsonDecode(response.body) as List<dynamic>;
+
+    return rawItems
+        .map((item) => StockByCategoryModel.fromJson(item as Map<String, dynamic>))
+        .toList();
+  }
+
+  Future<List<ProductModel>> getLowStockProducts() async {
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/analytics/low-stock');
+
+    final response = await _client.get(uri);
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Error loading low stock products. Status code: ${response.statusCode}',
+      );
+    }
+
+    final List<dynamic> rawProducts = jsonDecode(response.body) as List<dynamic>;
+
+    return rawProducts
+        .map((item) => ProductModel.fromJson(item as Map<String, dynamic>))
+        .toList();
   }
 
   Future<List<ProductModel>> getProducts({

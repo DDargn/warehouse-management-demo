@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
+from app.api.routes.analytics import router as analytics_router
 from app.api.routes.health import router as health_router
 from app.api.routes.products import router as products_router
 from app.api.routes.stock_movements import router as stock_movements_router
@@ -30,6 +31,7 @@ app.add_middleware(
 app.include_router(health_router)
 app.include_router(products_router, prefix="/api")
 app.include_router(stock_movements_router, prefix="/api")
+app.include_router(analytics_router, prefix="/api")
 
 
 @app.get("/")
@@ -41,4 +43,5 @@ def root():
         "db_health": "/db-health",
         "products": "/api/products",
         "stock_movements": "/api/stock-movements",
+        "analytics": "/api/analytics/summary",
     }

@@ -4,6 +4,7 @@ import '../../../../core/config/app_config.dart';
 import '../../../../shared/widgets/kpi_card.dart';
 import '../../../products/data/models/product_model.dart';
 import '../../../products/presentation/screens/products_screen.dart';
+import '../../data/models/stock_by_category_model.dart';
 import '../../data/warehouse_repository.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -113,6 +114,8 @@ class _DashboardContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final summary = data.summary;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
@@ -126,7 +129,7 @@ class _DashboardContent extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           Text(
-            'Datos cargados desde ${AppConfig.apiBaseUrl}',
+            'KPIs calculados en FastAPI desde PostgreSQL',
             style: Theme.of(context).textTheme.bodyMedium,
           ),
           const SizedBox(height: 24),
@@ -135,28 +138,159 @@ class _DashboardContent extends StatelessWidget {
             runSpacing: 16,
             children: [
               KpiCard(
-                title: 'Productos',
-                value: data.totalProducts.toString(),
-                description: 'Productos activos',
+                title: 'Productos activos',
+                value: summary.totalProducts.toString(),
+                description: 'Total de referencias',
                 icon: Icons.inventory_2_outlined,
               ),
               KpiCard(
+                title: 'Unidades en stock',
+                value: summary.totalStockUnits.toString(),
+                description: 'Suma del inventario',
+                icon: Icons.warehouse_outlined,
+              ),
+              KpiCard(
+                title: 'Valor del stock',
+                value: '${summary.stockValue.toStringAsFixed(2)} €',
+                description: 'Stock x precio unitario',
+                icon: Icons.euro_outlined,
+              ),
+              KpiCard(
                 title: 'Stock bajo',
-                value: data.totalLowStockProducts.toString(),
-                description: 'Pendientes de reposición',
+                value: summary.lowStockProducts.toString(),
+                description: 'Productos bajo mínimo',
                 icon: Icons.warning_amber_outlined,
               ),
               KpiCard(
                 title: 'Movimientos',
-                value: data.totalMovements.toString(),
+                value: summary.totalMovements.toString(),
                 description: 'Entradas y salidas',
                 icon: Icons.swap_vert,
+              ),
+              KpiCard(
+                title: 'Categorías',
+                value: summary.categoriesCount.toString(),
+                description: 'Familias de producto',
+                icon: Icons.category_outlined,
               ),
             ],
           ),
           const SizedBox(height: 32),
+          _StockByCategoryTable(items: data.stockByCategory),
+          const SizedBox(height: 32),
+          _LowStockTable(products: data.lowStockProducts),
+          const SizedBox(height: 32),
           _ProductsTable(products: data.products),
         ],
+      ),
+    );
+  }
+}
+
+class _StockByCategoryTable extends StatelessWidget {
+  const _StockByCategoryTable({
+    required this.items,
+  });
+
+  final List<StockByCategoryModel> items;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Stock por categoría',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: const [
+                    DataColumn(label: Text('Categoría')),
+                    DataColumn(label: Text('Productos')),
+                    DataColumn(label: Text('Unidades')),
+                    DataColumn(label: Text('Valor')),
+                  ],
+                  rows: items.map((item) {
+                    return DataRow(
+                      cells: [
+                        DataCell(Text(item.category)),
+                        DataCell(Text(item.totalProducts.toString())),
+                        DataCell(Text(item.totalStockUnits.toString())),
+                        DataCell(Text('${item.stockValue.toStringAsFixed(2)} €')),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _LowStockTable extends StatelessWidget {
+  const _LowStockTable({
+    required this.products,
+  });
+
+  final List<ProductModel> products;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      elevation: 0,
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: SizedBox(
+          width: double.infinity,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Productos con stock bajo',
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
+              const SizedBox(height: 16),
+              if (products.isEmpty)
+                const Text('No hay productos por debajo del stock mínimo.')
+              else
+                SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: DataTable(
+                    columns: const [
+                      DataColumn(label: Text('Producto')),
+                      DataColumn(label: Text('SKU')),
+                      DataColumn(label: Text('Stock')),
+                      DataColumn(label: Text('Mínimo')),
+                      DataColumn(label: Text('Ubicación')),
+                    ],
+                    rows: products.map((product) {
+                      return DataRow(
+                        cells: [
+                          DataCell(Text(product.name)),
+                          DataCell(Text(product.sku)),
+                          DataCell(Text(product.stock.toString())),
+                          DataCell(Text(product.minStock.toString())),
+                          DataCell(Text(product.location ?? '-')),
+                        ],
+                      );
+                    }).toList(),
+                  ),
+                ),
+            ],
+          ),
+        ),
       ),
     );
   }
@@ -181,7 +315,7 @@ class _ProductsTable extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
-                'Productos',
+                'Resumen de productos',
                 style: Theme.of(context).textTheme.titleLarge,
               ),
               const SizedBox(height: 16),
