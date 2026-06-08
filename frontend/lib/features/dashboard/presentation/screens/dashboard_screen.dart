@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/config/app_config.dart';
 import '../../../../shared/widgets/kpi_card.dart';
 import '../../../products/data/models/product_model.dart';
+import '../../../products/presentation/screens/products_screen.dart';
 import '../../data/warehouse_repository.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -29,12 +30,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
     });
   }
 
+  void _openProductsScreen() {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (context) => const ProductsScreen(),
+          ),
+        )
+        .then((_) => _reloadDashboard());
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         title: const Text(AppConfig.appName),
         actions: [
+          TextButton.icon(
+            onPressed: _openProductsScreen,
+            icon: const Icon(Icons.inventory_2_outlined),
+            label: const Text('Productos'),
+          ),
           IconButton(
             tooltip: 'Recargar datos',
             onPressed: _reloadDashboard,
@@ -48,7 +64,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
           return Row(
             children: [
-              if (isWide) const _Sidebar(),
+              if (isWide)
+                _Sidebar(
+                  onProductsSelected: _openProductsScreen,
+                ),
               Expanded(
                 child: FutureBuilder<DashboardData>(
                   future: _dashboardFuture,
@@ -274,7 +293,11 @@ class _ErrorState extends StatelessWidget {
 }
 
 class _Sidebar extends StatelessWidget {
-  const _Sidebar();
+  const _Sidebar({
+    required this.onProductsSelected,
+  });
+
+  final VoidCallback onProductsSelected;
 
   @override
   Widget build(BuildContext context) {
@@ -298,6 +321,11 @@ class _Sidebar extends StatelessWidget {
           label: Text('Movimientos'),
         ),
       ],
+      onDestinationSelected: (index) {
+        if (index == 1) {
+          onProductsSelected();
+        }
+      },
     );
   }
 }

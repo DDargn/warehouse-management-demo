@@ -65,6 +65,61 @@ class WarehouseRepository {
         .toList();
   }
 
+  Future<ProductModel> createProduct(ProductPayload payload) async {
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/products');
+
+    final response = await _client.post(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(payload.toJson()),
+    );
+
+    if (response.statusCode != 201) {
+      throw Exception(
+        'Error creating product. Status code: ${response.statusCode}. Body: ${response.body}',
+      );
+    }
+
+    return ProductModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  }
+
+  Future<ProductModel> updateProduct({
+    required int productId,
+    required ProductPayload payload,
+  }) async {
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/products/$productId');
+
+    final response = await _client.put(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: jsonEncode(payload.toJson()),
+    );
+
+    if (response.statusCode != 200) {
+      throw Exception(
+        'Error updating product. Status code: ${response.statusCode}. Body: ${response.body}',
+      );
+    }
+
+    return ProductModel.fromJson(jsonDecode(response.body) as Map<String, dynamic>);
+  }
+
+  Future<void> deleteProduct(int productId) async {
+    final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/products/$productId');
+
+    final response = await _client.delete(uri);
+
+    if (response.statusCode != 204) {
+      throw Exception(
+        'Error deleting product. Status code: ${response.statusCode}. Body: ${response.body}',
+      );
+    }
+  }
+
   Future<List<StockMovementModel>> getStockMovements() async {
     final uri = Uri.parse('${AppConfig.apiBaseUrl}/api/stock-movements');
 
