@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
 import '../../data/models/product_model.dart';
 
 class ProductFormDialog extends StatefulWidget {
@@ -137,10 +138,61 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      title: Text(_isEditing ? 'Editar producto' : 'Crear producto'),
+      titlePadding: EdgeInsets.zero,
+      contentPadding: EdgeInsets.zero,
+      actionsPadding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
+      title: Container(
+        padding: const EdgeInsets.all(24),
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              Color(0xFF102838),
+              Color(0xFF0C1B26),
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.vertical(
+            top: Radius.circular(22),
+          ),
+        ),
+        child: Row(
+          children: [
+            Container(
+              width: 46,
+              height: 46,
+              decoration: BoxDecoration(
+                color: AppTheme.primarySoft,
+                borderRadius: BorderRadius.circular(14),
+              ),
+              child: Icon(
+                _isEditing ? Icons.edit_outlined : Icons.add_box_outlined,
+                color: AppTheme.primary,
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(_isEditing ? 'Editar producto' : 'Crear producto'),
+                  const SizedBox(height: 4),
+                  Text(
+                    _isEditing
+                        ? 'Actualiza los datos principales de la referencia.'
+                        : 'Añade una nueva referencia al almacén.',
+                    style: Theme.of(context).textTheme.bodySmall,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
       content: SizedBox(
-        width: 720,
+        width: 760,
         child: SingleChildScrollView(
+          padding: const EdgeInsets.all(24),
           child: Form(
             key: _formKey,
             child: Wrap(
@@ -148,91 +200,91 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
               runSpacing: 16,
               children: [
                 _DialogField(
-                  width: 330,
+                  width: 350,
                   child: TextFormField(
                     controller: _nameController,
                     decoration: const InputDecoration(
                       labelText: 'Nombre',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.inventory_2_outlined),
                     ),
                     validator: _requiredTextValidator,
                   ),
                 ),
                 _DialogField(
-                  width: 330,
+                  width: 350,
                   child: TextFormField(
                     controller: _skuController,
                     decoration: const InputDecoration(
                       labelText: 'SKU',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.qr_code_2_outlined),
                     ),
                     validator: _requiredTextValidator,
                   ),
                 ),
                 _DialogField(
-                  width: 330,
+                  width: 350,
                   child: TextFormField(
                     controller: _categoryController,
                     decoration: const InputDecoration(
                       labelText: 'Categoría',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.category_outlined),
                     ),
                     validator: _requiredTextValidator,
                   ),
                 ),
                 _DialogField(
-                  width: 330,
+                  width: 350,
                   child: TextFormField(
                     controller: _locationController,
                     decoration: const InputDecoration(
                       labelText: 'Ubicación',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.location_on_outlined),
                     ),
                   ),
                 ),
                 _DialogField(
-                  width: 210,
+                  width: 224,
                   child: TextFormField(
                     controller: _stockController,
                     decoration: const InputDecoration(
                       labelText: 'Stock',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.warehouse_outlined),
                     ),
                     keyboardType: TextInputType.number,
                     validator: _nonNegativeIntValidator,
                   ),
                 ),
                 _DialogField(
-                  width: 210,
+                  width: 224,
                   child: TextFormField(
                     controller: _minStockController,
                     decoration: const InputDecoration(
                       labelText: 'Stock mínimo',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.warning_amber_outlined),
                     ),
                     keyboardType: TextInputType.number,
                     validator: _nonNegativeIntValidator,
                   ),
                 ),
                 _DialogField(
-                  width: 210,
+                  width: 224,
                   child: TextFormField(
                     controller: _unitPriceController,
                     decoration: const InputDecoration(
                       labelText: 'Precio unitario',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.euro_outlined),
                     ),
                     keyboardType: TextInputType.number,
                     validator: _nonNegativeDoubleValidator,
                   ),
                 ),
                 SizedBox(
-                  width: 680,
+                  width: 720,
                   child: TextFormField(
                     controller: _descriptionController,
                     decoration: const InputDecoration(
                       labelText: 'Descripción',
-                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.notes_outlined),
                     ),
                     maxLines: 3,
                   ),
@@ -247,9 +299,10 @@ class _ProductFormDialogState extends State<ProductFormDialog> {
           onPressed: () => Navigator.of(context).pop(),
           child: const Text('Cancelar'),
         ),
-        FilledButton(
+        FilledButton.icon(
           onPressed: _submit,
-          child: Text(_isEditing ? 'Guardar cambios' : 'Crear producto'),
+          icon: Icon(_isEditing ? Icons.save_outlined : Icons.add),
+          label: Text(_isEditing ? 'Guardar cambios' : 'Crear producto'),
         ),
       ],
     );

@@ -16,7 +16,7 @@ class WarehouseApp extends StatelessWidget {
     return MaterialApp(
       title: AppConfig.appName,
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.light,
+      theme: AppTheme.dark,
       home: const DashboardScreen(),
     );
   }

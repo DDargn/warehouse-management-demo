@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/status_chip.dart';
 import '../../../dashboard/data/warehouse_repository.dart';
 import '../../data/models/product_model.dart';
 import '../widgets/product_form_dialog.dart';
@@ -92,9 +94,10 @@ class _ProductsScreenState extends State<ProductsScreen> {
               onPressed: () => Navigator.of(context).pop(false),
               child: const Text('Cancelar'),
             ),
-            FilledButton(
+            FilledButton.icon(
               onPressed: () => Navigator.of(context).pop(true),
-              child: const Text('Eliminar'),
+              icon: const Icon(Icons.delete_outline),
+              label: const Text('Eliminar'),
             ),
           ],
         );
@@ -118,7 +121,18 @@ class _ProductsScreenState extends State<ProductsScreen> {
     if (!mounted) return;
 
     ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
+      SnackBar(
+        content: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_outline,
+              color: AppTheme.primary,
+            ),
+            const SizedBox(width: 10),
+            Text(message),
+          ],
+        ),
+      ),
     );
   }
 
@@ -127,7 +141,16 @@ class _ProductsScreenState extends State<ProductsScreen> {
 
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(message),
+        content: Row(
+          children: [
+            const Icon(
+              Icons.error_outline,
+              color: AppTheme.danger,
+            ),
+            const SizedBox(width: 10),
+            Expanded(child: Text(message)),
+          ],
+        ),
       ),
     );
   }
@@ -150,6 +173,7 @@ class _ProductsScreenState extends State<ProductsScreen> {
             onPressed: _reloadProducts,
             icon: const Icon(Icons.refresh),
           ),
+          const SizedBox(width: 12),
         ],
       ),
       floatingActionButton: FloatingActionButton.extended(
@@ -157,48 +181,125 @@ class _ProductsScreenState extends State<ProductsScreen> {
         icon: const Icon(Icons.add),
         label: const Text('Nuevo producto'),
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(24),
-        child: Column(
-          children: [
-            _ProductsToolbar(
-              lowStockOnly: _lowStockOnly,
-              onLowStockOnlyChanged: _toggleLowStockOnly,
-            ),
-            const SizedBox(height: 16),
-            Expanded(
-              child: FutureBuilder<List<ProductModel>>(
-                future: _productsFuture,
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (snapshot.hasError) {
-                    return _ErrorState(
-                      error: snapshot.error.toString(),
-                      onRetry: _reloadProducts,
-                    );
-                  }
-
-                  final products = snapshot.data ?? [];
-
-                  if (products.isEmpty) {
-                    return const Center(
-                      child: Text('No hay productos para mostrar.'),
-                    );
-                  }
-
-                  return _ProductsTable(
-                    products: products,
-                    onEdit: _openEditDialog,
-                    onDelete: _confirmDelete,
-                  );
-                },
-              ),
-            ),
-          ],
+      body: DecoratedBox(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [
+              AppTheme.background,
+              AppTheme.backgroundAlt,
+              AppTheme.background,
+            ],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
         ),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _ProductsHeader(
+                onCreateProduct: _openCreateDialog,
+              ),
+              const SizedBox(height: 18),
+              _ProductsToolbar(
+                lowStockOnly: _lowStockOnly,
+                onLowStockOnlyChanged: _toggleLowStockOnly,
+              ),
+              const SizedBox(height: 16),
+              Expanded(
+                child: FutureBuilder<List<ProductModel>>(
+                  future: _productsFuture,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (snapshot.hasError) {
+                      return _ErrorState(
+                        error: snapshot.error.toString(),
+                        onRetry: _reloadProducts,
+                      );
+                    }
+
+                    final products = snapshot.data ?? [];
+
+                    if (products.isEmpty) {
+                      return _EmptyState(
+                        lowStockOnly: _lowStockOnly,
+                        onCreateProduct: _openCreateDialog,
+                      );
+                    }
+
+                    return _ProductsTable(
+                      products: products,
+                      onEdit: _openEditDialog,
+                      onDelete: _confirmDelete,
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _ProductsHeader extends StatelessWidget {
+  const _ProductsHeader({
+    required this.onCreateProduct,
+  });
+
+  final VoidCallback onCreateProduct;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF102838),
+            Color(0xFF0A1720),
+          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        border: Border.all(color: AppTheme.border),
+      ),
+      child: Wrap(
+        alignment: WrapAlignment.spaceBetween,
+        crossAxisAlignment: WrapCrossAlignment.center,
+        spacing: 20,
+        runSpacing: 16,
+        children: [
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 700),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Productos del almacén',
+                  style: Theme.of(context).textTheme.headlineMedium,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  'Crea, edita, filtra y controla las referencias del inventario desde una tabla conectada a FastAPI.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                ),
+              ],
+            ),
+          ),
+          FilledButton.icon(
+            onPressed: onCreateProduct,
+            icon: const Icon(Icons.add),
+            label: const Text('Crear producto'),
+          ),
+        ],
       ),
     );
   }
@@ -216,12 +317,28 @@ class _ProductsToolbar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
-      child: SwitchListTile(
-        title: const Text('Mostrar solo productos con stock bajo'),
-        subtitle: const Text('Filtra productos cuyo stock actual está por debajo del mínimo'),
-        value: lowStockOnly,
-        onChanged: onLowStockOnlyChanged,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+        child: SwitchListTile(
+          secondary: Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppTheme.warningSoft,
+              borderRadius: BorderRadius.circular(14),
+            ),
+            child: const Icon(
+              Icons.warning_amber_outlined,
+              color: AppTheme.warning,
+            ),
+          ),
+          title: const Text('Mostrar solo productos con stock bajo'),
+          subtitle: const Text(
+            'Filtra productos cuyo stock actual está por debajo del mínimo',
+          ),
+          value: lowStockOnly,
+          onChanged: onLowStockOnlyChanged,
+        ),
       ),
     );
   }
@@ -241,67 +358,155 @@ class _ProductsTable extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      elevation: 0,
       child: SizedBox(
         width: double.infinity,
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),
-          child: SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: DataTable(
-              columns: const [
-                DataColumn(label: Text('ID')),
-                DataColumn(label: Text('Nombre')),
-                DataColumn(label: Text('SKU')),
-                DataColumn(label: Text('Categoría')),
-                DataColumn(label: Text('Stock')),
-                DataColumn(label: Text('Mín.')),
-                DataColumn(label: Text('Ubicación')),
-                DataColumn(label: Text('Precio')),
-                DataColumn(label: Text('Estado')),
-                DataColumn(label: Text('Acciones')),
-              ],
-              rows: products.map((product) {
-                return DataRow(
-                  cells: [
-                    DataCell(Text(product.id.toString())),
-                    DataCell(Text(product.name)),
-                    DataCell(Text(product.sku)),
-                    DataCell(Text(product.category)),
-                    DataCell(Text(product.stock.toString())),
-                    DataCell(Text(product.minStock.toString())),
-                    DataCell(Text(product.location ?? '-')),
-                    DataCell(Text('${product.unitPrice.toStringAsFixed(2)} €')),
-                    DataCell(
-                      product.isLowStock
-                          ? const Chip(
-                              label: Text('Stock bajo'),
-                              avatar: Icon(Icons.warning_amber, size: 18),
-                            )
-                          : const Chip(
-                              label: Text('OK'),
-                              avatar: Icon(Icons.check_circle, size: 18),
-                            ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 42,
+                    height: 42,
+                    decoration: BoxDecoration(
+                      color: AppTheme.primarySoft,
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    DataCell(
-                      Row(
-                        children: [
-                          IconButton(
-                            tooltip: 'Editar',
-                            onPressed: () => onEdit(product),
-                            icon: const Icon(Icons.edit_outlined),
-                          ),
-                          IconButton(
-                            tooltip: 'Eliminar',
-                            onPressed: () => onDelete(product),
-                            icon: const Icon(Icons.delete_outline),
-                          ),
-                        ],
-                      ),
+                    child: const Icon(
+                      Icons.inventory_2_outlined,
+                      color: AppTheme.primary,
                     ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Listado de productos',
+                          style: Theme.of(context).textTheme.titleLarge,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${products.length} productos visibles',
+                          style: Theme.of(context).textTheme.bodySmall,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              SingleChildScrollView(
+                scrollDirection: Axis.horizontal,
+                child: DataTable(
+                  columns: const [
+                    DataColumn(label: Text('ID')),
+                    DataColumn(label: Text('Nombre')),
+                    DataColumn(label: Text('SKU')),
+                    DataColumn(label: Text('Categoría')),
+                    DataColumn(label: Text('Stock')),
+                    DataColumn(label: Text('Mín.')),
+                    DataColumn(label: Text('Ubicación')),
+                    DataColumn(label: Text('Precio')),
+                    DataColumn(label: Text('Estado')),
+                    DataColumn(label: Text('Acciones')),
                   ],
-                );
-              }).toList(),
+                  rows: products.map((product) {
+                    return DataRow(
+                      cells: [
+                        DataCell(Text(product.id.toString())),
+                        DataCell(Text(product.name)),
+                        DataCell(Text(product.sku)),
+                        DataCell(Text(product.category)),
+                        DataCell(Text(product.stock.toString())),
+                        DataCell(Text(product.minStock.toString())),
+                        DataCell(Text(product.location ?? '-')),
+                        DataCell(Text('${product.unitPrice.toStringAsFixed(2)} €')),
+                        DataCell(
+                          product.isLowStock
+                              ? const InventoryStatusChip.lowStock()
+                              : const InventoryStatusChip.ok(),
+                        ),
+                        DataCell(
+                          Row(
+                            children: [
+                              IconButton(
+                                tooltip: 'Editar',
+                                onPressed: () => onEdit(product),
+                                icon: const Icon(Icons.edit_outlined),
+                              ),
+                              IconButton(
+                                tooltip: 'Eliminar',
+                                onPressed: () => onDelete(product),
+                                icon: const Icon(Icons.delete_outline),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                  }).toList(),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _EmptyState extends StatelessWidget {
+  const _EmptyState({
+    required this.lowStockOnly,
+    required this.onCreateProduct,
+  });
+
+  final bool lowStockOnly;
+  final VoidCallback onCreateProduct;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Card(
+        child: Padding(
+          padding: const EdgeInsets.all(28),
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 520),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.inventory_2_outlined,
+                  size: 52,
+                  color: AppTheme.primary,
+                ),
+                const SizedBox(height: 16),
+                Text(
+                  lowStockOnly
+                      ? 'No hay productos con stock bajo'
+                      : 'No hay productos para mostrar',
+                  style: Theme.of(context).textTheme.titleLarge,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 10),
+                Text(
+                  lowStockOnly
+                      ? 'Desactiva el filtro para ver el inventario completo.'
+                      : 'Crea una nueva referencia para empezar a trabajar con el inventario.',
+                  style: Theme.of(context).textTheme.bodyMedium,
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 20),
+                FilledButton.icon(
+                  onPressed: onCreateProduct,
+                  icon: const Icon(Icons.add),
+                  label: const Text('Nuevo producto'),
+                ),
+              ],
             ),
           ),
         ),
@@ -323,7 +528,6 @@ class _ErrorState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Card(
-        elevation: 0,
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: ConstrainedBox(
@@ -331,7 +535,11 @@ class _ErrorState extends StatelessWidget {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.error_outline, size: 48),
+                const Icon(
+                  Icons.error_outline,
+                  size: 48,
+                  color: AppTheme.danger,
+                ),
                 const SizedBox(height: 16),
                 Text(
                   'No se pudieron cargar los productos',
@@ -341,6 +549,7 @@ class _ErrorState extends StatelessWidget {
                 Text(
                   error,
                   textAlign: TextAlign.center,
+                  style: Theme.of(context).textTheme.bodyMedium,
                 ),
                 const SizedBox(height: 20),
                 FilledButton.icon(
