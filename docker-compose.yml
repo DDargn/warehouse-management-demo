@@ -14,5 +14,16 @@ services:
       - ./database/init.sql:/docker-entrypoint-initdb.d/01-init.sql
       - ./database/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql
 
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        API_BASE_URL: ${API_BASE_URL}
+    container_name: warehouse_frontend
+    restart: unless-stopped
+    ports:
+      - "${FRONTEND_PORT}:80"
+
 volumes:
   warehouse_postgres_data:
