@@ -36,3 +36,30 @@ git clone https://github.com/tuusuario/warehouse-manager-demo.git
 cd warehouse-manager-demo
 cp .env.example .env
 docker compose up --build
+
+
+## Capturas
+
+### Dashboard
+
+Vista principal con KPIs calculados desde el backend FastAPI y datos almacenados en PostgreSQL.
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+### Gestión de productos
+
+Pantalla CRUD para consultar, crear, editar y eliminar productos del almacén.
+
+![Gestión de productos](docs/screenshots/products.png)
+
+### Formulario de producto
+
+Modal de creación y edición de productos con validaciones básicas.
+
+![Formulario de producto](docs/screenshots/product-form.png)
+
+### API documentada con Swagger
+
+Documentación interactiva generada automáticamente por FastAPI.
+
+![Swagger API](docs/screenshots/swagger.png)
