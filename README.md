@@ -29,15 +29,6 @@ Demo web de gestión de almacén construida con Flutter Web, FastAPI, PostgreSQL
 
 No es necesario tener Flutter ni Python instalados para ejecutar la demo con Docker.
 
-## Instalación rápida
-
-```bash
-git clone https://github.com/tuusuario/warehouse-manager-demo.git
-cd warehouse-manager-demo
-cp .env.example .env
-docker compose up --build
-
-
 ## Capturas
 
 ### Dashboard
@@ -63,3 +54,13 @@ Modal de creación y edición de productos con validaciones básicas.
 Documentación interactiva generada automáticamente por FastAPI.
 
 ![Swagger API](docs/screenshots/swagger.png)
+
+## Instalación rápida
+
+```bash
+git clone https://github.com/tuusuario/warehouse-manager-demo.git
+cd warehouse-manager-demo
+cp .env.example .env
+docker compose up --build
+
+
